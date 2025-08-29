@@ -1,0 +1,12 @@
+spring:
+  jpa:
+    generate-ddl: false # 테이블 생성 시 true # false   # 절대 변경 금지. 테이블 생성
+    hibernate:
+      ddl-auto: none # 테이블 변경 시 update # none      # 절대 변경 금지. 테이블 생성
+      naming:
+        physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl   # JPA 에서 디폴트로 DB 정보 소문자로 세팅하는 부분 해결
+    show-sql: true
+    open-in-view: false  # false: 트랜잭션 종료시 영속성 컨텍스트가 닫힘. lazy 로딩시 컨트롤러에서 뷰로 반환시 연관관계 객체 호출 불가
+    # true: 트랜잭션 종료후에도 영속성 컨텍스트가 생존.
+  #    database-platform: org.hibernate.dialect.OracleDialect # 지정할 필요없음
+

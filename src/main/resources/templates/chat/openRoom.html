@@ -1,0 +1,161 @@
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout_frame}" xmlns="http://www.w3.org/1999/html">
+
+
+<div layout:fragment="content">
+    <div class="page-header align-items-start min-vh-50 pt-3 pb-3 m-3 border-radius-lg">
+        <span class="mask bg-gradient-dark opacity-6"></span>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-2 text-center mx-auto">
+                    <h5 class="text-white mb-2 mt-2">Open Chat Room</h5>
+                </div>
+            </div>
+
+            <div class="row  justify-content-center">
+                <div class="mx-auto">
+                    <div class="card z-index-0 max-height-600" >
+                        <div class="card-header ps text-sm">
+                            <span>인원</span>
+                            <span class="participants"></span>
+                        </div>
+                        <div class="card-body content-left" style="overflow-y: auto;">
+                            <div class="content">
+                                <!-- 파일은 매일 초기화-->
+                            </div>
+                        </div>
+                        <div class="card-footer d-flex flex-column input-group">
+                            <div class="input-group">
+                                <span class="input-group-text">메시지</span>
+                                <textarea class="form-control" id="msg"></textarea>
+                            </div>
+
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+    <script>
+        // 메시지 입력 관련 매핑
+        const msgEl = document.querySelector('#msg')
+
+        msgEl.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter' && !event.shiftKey ) {
+                event.preventDefault()
+                let msg = msgEl.value
+                msgEl.value = ''
+
+                if(msg !== '')
+                {
+                    sendMsg(msg)
+                }
+            }
+        })
+
+
+        // 메시지 전송 관련
+        let socket = new WebSocket(`ws://${location.host}/openChatty`)
+
+        socket.onopen = function () {
+            // console.log("온 오픈")
+        }
+        socket.onmessage = function (event) {
+            // console.log("온 메시지")
+            const data = JSON.parse(event.data)
+            // console.log(data)
+
+            if(data.hasOwnProperty('clients')) // 구성원
+            {
+                const clients = data.clients
+                const alertMsg = data.alert
+
+                console.log(clients)
+                document.querySelector(".participants").innerText = clients
+
+                createNewAlertArea(alertMsg)
+            }
+            else // 일반 메시지
+            {
+                createNewMsgArea(false, data.time, data.clientIp, data.msg)
+            }
+        }
+        socket.onclose =  function () {
+            // console.log("온 클로즈")
+        }
+        socket.onerror = function (error) {
+            // console.log("온 에러")
+            console.log("에러 발생", error)
+        }
+
+
+        function sendMsg (msg)
+        {
+            if( socket.readyState === WebSocket.OPEN ){
+                socket.send(msg)
+            }
+            else
+            {
+                alert("웹 소켓이 열리지 않았습니다")
+                location.reload()
+            }
+        }
+
+
+        function createNewAlertArea (msg)
+        {
+            let newDiv = document.createElement('div')
+            newDiv.classList.add('border-radius-md')
+            newDiv.classList.add('text-center')
+
+            let newP = document.createElement('p')
+            newP.innerText = msg
+
+            newDiv.appendChild(newP)
+
+            let content = document.querySelector('.content')
+            content.appendChild(newDiv)
+
+            const body = document.querySelector('.card-body')
+            body.scrollTop = body.scrollHeight
+        }
+
+
+        function createNewMsgArea ( isMyself, time, user, msg )
+        {
+            let newDiv = document.createElement('div')
+            const bgColor = isMyself === true ? 'bg-secondary-subtle' : 'bg-primary-subtle'
+            newDiv.classList.add(bgColor)
+            newDiv.classList.add('border-radius-md')
+
+            let newTimeSpan = document.createElement('span')
+            newTimeSpan.innerText = '['+time+'] '
+
+            let newNameSpan = document.createElement('span')
+            newNameSpan.innerText = '['+user+'] '
+
+            let newP = document.createElement('p')
+            newP.innerText = msg
+            newP.prepend(newNameSpan)
+            newP.prepend(newTimeSpan)
+
+            newDiv.appendChild(newP)
+
+            let content = document.querySelector('.content')
+            content.appendChild(newDiv)
+
+
+            const body = document.querySelector('.card-body')
+            body.scrollTop = body.scrollHeight
+        }
+    </script>
+    <iframe id="iframe1" name="iframe1" style="display: none"></iframe>
+</div>
+
+
+</html>

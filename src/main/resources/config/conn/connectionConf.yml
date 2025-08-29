@@ -1,0 +1,79 @@
+--- ## profile:local 설정
+spring:
+  config:
+    activate:
+      on-profile: local
+
+
+connection:
+  kcp:
+    telegram:
+      domain: https://testsio-relay.kcp.co.kr
+      timeout: 5000
+      bot-token: 1497006230:AAFQ5il8ITOArRC8TXEilawzsGamz2HYAYU
+      api-monitor-id: -1001236699252
+
+
+
+--- ## profile:test 설정
+spring:
+  config:
+    activate:
+      on-profile: test
+
+
+connection:
+  kcp:
+    telegram:
+      domain: https://testsio-relay.kcp.co.kr
+      timeout: 5000
+      bot-token: 1497006230:AAFQ5il8ITOArRC8TXEilawzsGamz2HYAYU
+      api-monitor-id: -1001236699252
+
+
+
+--- ## profile:staging 설정
+spring:
+  config:
+    activate:
+      on-profile: staging
+
+
+connection:
+  kcp:
+    telegram:
+      domain: https://testsio-relay.kcp.co.kr
+      timeout: 5000
+      bot-token: 1497006230:AAFQ5il8ITOArRC8TXEilawzsGamz2HYAYU
+      api-monitor-id:  -1001236699252
+
+
+--- ## profile:real 설정
+spring:
+  config:
+    activate:
+      on-profile: real
+
+connection:
+  kcp:
+    telegram:
+      domain: https://sio-relay.kcp.co.kr
+      timeout: 5000
+      bot-token: 1497006230:AAFQ5il8ITOArRC8TXEilawzsGamz2HYAYU
+      api-monitor-id: -1001236699252
+
+
+--- ## profile:dr 설정
+spring:
+  config:
+    activate:
+      on-profile: dr
+
+connection:
+  kcp:
+    telegram:
+      domain: https://sio-relay.kcp.co.kr
+      timeout: 5000
+      bot-token: 1497006230:AAFQ5il8ITOArRC8TXEilawzsGamz2HYAYU
+      api-monitor-id: -1001236699252
+

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout_frame}" xmlns="http://www.w3.org/1999/html">
+
+
+<div class="row justify-content-md-center" layout:fragment="content">
+
+    <div class="col-md-8 mt-4">
+        <div class="card text-center">
+            <div class="card-header pb-0 px-3">
+                <h6 class="mb-0">SSL 인증서 DB 업로드</h6>
+                <button class="btn btn-sm btn-outline-dark" onclick="addInput()"> 파일 선택칸 추가하기 </button>
+            </div>
+
+            <form id="form1" name="dtoListTest" action="/ssl/save" method="post" enctype="multipart/form-data" target="iframe1">
+                <div class="card-body pt-4 p-3 px-8">
+                    <ul class="list-group">
+                        <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg form-group">
+                            <div class="d-flex flex-column col col-md-7 ">
+                                <label for="serviceType">어떤 서비스 인증서를 저장할까요?</label>
+                                <div class="dropdown input-group input-group-sm">
+                                    <select id="serviceType" class="btn btn-sm btn-outline-dark" data-name="svcName">
+                                        <option selected disabled hidden>* 발급 주체</option>
+                                        <option class="text-center" value="KCP">KCP</option>
+                                        <option class="text-center" value="APL">APL</option>
+                                        <option class="text-center" value="DCB">DCB</option>
+                                        <option class="text-center" value="APS">APS</option>
+                                        <option class="text-center" value="GPL">GPL</option>
+                                        <option class="text-center" value="SPL">SPL</option>
+                                    </select>
+
+                                    <select class="btn btn-sm btn-outline-dark" data-name="certType">
+                                        <option selected disabled hidden>* 인증서 유형</option>
+                                        <option class="text-center" value="LEAF">LEAF</option>
+                                        <option class="text-center" value="INTERMEDIATE">INTERMEDIATE</option>
+                                        <option class="text-center" value="ROOT">ROOT</option>
+                                    </select>
+
+                                    <input class="subSvc form-control mb-3 px-4" type="text" data-name="subSvc" placeholder="필요 시 서브 서비스 입력"/>
+                                </div>
+
+                                <div class="input-group input-group-sm mb-3" >
+                                    <span class="input-group-text">*</span>
+                                    <input class="upload form-control form-control-sm mb-0" type="file"  data-name="certFile" />
+                                </div>
+                            </div>
+
+                            <div class="ms-auto text-end">
+                                <a class="btn btn-link text-danger text-gradient px-6 mb-0 mt-3" onclick="javascript:delLiNode(this)"><i
+                                        class="far fa-trash-alt me-2"></i>Delete</a>
+                            </div>
+
+                        </li>
+
+
+                    </ul>
+
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-outline-primary" type="submit" onclick="javascript:checkBeforeUpload()"> 업로드하기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+
+        // 파일 업로드
+        function uploadFiles(formEl)
+        {
+            const formData = new FormData(formEl)
+
+            let xhr = new XMLHttpRequest()
+            xhr.open( formEl.method, formEl.action, true)
+
+            xhr.onload = (() => {
+
+                if(xhr.status == 200)
+                {
+                    location.replace("/ssl/list")
+                }
+                else if (xhr.status == 400) // BadRequest : 통합파일인경우
+                {
+                    alert("잘못된 인증서 파일입니다. 개별 파일로 올려주세요(통합파일 불가)")
+                }
+                else
+                {
+                    console.log(xhr)
+                    alert('이상 응답', xhr.status , xhr.statusText, xhr.responseText)
+                }
+            })
+
+            xhr.onerror = (() => {
+                console.log(xhr)
+                alert('온 에러 ', xhr.status , xhr.statusText, xhr.responseText)
+            })
+
+            xhr.send(formData)
+
+        }
+
+
+        // 파일 업로드 전 처리 로직 (빈 파일 칸 검증 / 객체 List로 받기 위한 순서 세팅 )
+        function checkBeforeUpload()
+        {
+            // 디폴트 submit 방지
+            const formEl = document.querySelector('form')
+            formEl.addEventListener('submit', (event) => {
+                event.preventDefault()
+            })
+
+            const liEl = formEl.querySelectorAll('li')
+
+            // for( l of liEl )
+            for( let i = 0;  i < liEl.length; i++ )
+            {
+                let l = liEl[i]
+                // 하나라도 비어있는 파일 선택칸이 있다면
+                if( !checkNodeNotEmpty(l) )
+                {
+                    alert('모든 파일선택칸을 채워야합니다 ')
+                    return false
+                }
+                else
+                {
+                    // 객체 배열 순서 세팅
+                    setOrderForList(l, i)
+                }
+            }
+            // 파일 업로드
+            uploadFiles(formEl)
+        }
+
+
+        // 파일 선택칸 추가
+        function addInput() {
+            const form1 = document.getElementById('form1')
+            const allLi = form1.querySelectorAll('li')
+            const lastLi = allLi[allLi.length - 1]
+
+            // 마지막 파일 선택칸이 비어있지 않아야 추가 가능
+            if (checkNodeNotEmpty(lastLi))
+            {
+                let newLi = lastLi.cloneNode(true);
+                let newLiInput = newLi.querySelectorAll('input')
+                newLiInput.forEach( input => {
+                    input.value = ''
+                })
+
+                lastLi.insertAdjacentElement('afterend', newLi);
+            } else {
+                alert('비어있는 파일 선택칸을 채우고 추가해주세요')
+            }
+        }
+
+        // 리스트로 객체를 보내기 위해서 순서 지정
+        function setOrderForList(liEl, order)
+        {
+            let valueFields = liEl.querySelectorAll('[data-name]')
+
+            for(let i = 0; i<valueFields.length; i++)
+            {
+                let l = valueFields[i]
+                l.setAttribute('name' , 'list[' + order + '].' + l.dataset.name )
+            }
+
+        }
+
+        // 파일 선택칸이 비어있는지 확인
+        function checkNodeNotEmpty(liEl)
+        {
+            // 발급주체 / 인증서유형 select가 선택되지 않았을 경우
+            const allSel = liEl.querySelectorAll('select')
+
+            for(const s of allSel)
+            {
+                if(s.selectedIndex < 1)
+                {
+                    const emptyName = s.dataset.name == 'svc_subject' ? '발급 주체' : s.dataset.name == 'cert_type' ? '인증서 유형' : '셀렉트박스'
+                    // console.log(emptyName, '을 선택하세요')
+                    return false
+                }else{
+                    // console.log('셀렉트박스의 값은 ', s.value)
+                }
+            }
+
+            // 선택된 파일이 없을 경우
+            const inputEl = liEl.querySelector('input[class*="upload"]')
+
+            if (inputEl.value == '')
+            {
+                // console.log('파일을 선택하세요')
+                return false
+            }
+
+            return true
+        }
+
+
+        // 파일 선택칸 삭제
+        function delLiNode(ele)
+        {
+            let ulEl = ele.closest('ul')
+            let liEl = ulEl.querySelectorAll('li')
+
+            // 삭제하려는 파일 선택칸이 유일 개체인지 확인
+            if(liEl.length > 1 )
+            {
+                ele.closest('li').remove()
+            }
+            else
+            {
+                alert("삭제 불가")
+            }
+        }
+
+
+    </script>
+    <iframe id="iframe1" name="iframe1" style="display: none"></iframe>
+</div>
+
+
+</html>

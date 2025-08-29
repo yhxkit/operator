@@ -1,0 +1,81 @@
+
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout_frame}" xmlns="http://www.w3.org/1999/html">
+
+
+<div layout:fragment="content">
+    <div class="page-header align-items-start min-vh-50 pt-5 pb-11 m-3 border-radius-lg">
+        <span class="mask bg-gradient-dark opacity-6"></span>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-5 text-center mx-auto">
+                    <h1 class="text-white mb-2 mt-5">Welcome!</h1>
+                </div>
+            </div>
+
+            <div class="row  justify-content-center">
+                <div class="col-xl-4 col-lg-5 col-md-7 mx-auto">
+                    <div class="card z-index-0">
+                        <div class="card-header text-center pt-4">
+                            <span th:if="${alertMsg}" th:text="${alertMsg}"></span>
+                            <h5>Login</h5>
+                        </div>
+                        <div class="card-body">
+                            <form role="form" id="signInForm"  th:action="@{/login}" method="POST">
+                                <div class="mb-3">
+                                    <input name="accountName" type="text" class="form-control" placeholder="Account Name" aria-label="Name">
+                                </div>
+                                <div class="mb-3">
+                                    <input name="password" type="password" class="form-control" placeholder="Password" aria-label="Password">
+                                </div>
+                                <div class="text-center">
+                                    <button onclick="signIn()" type="submit"  class="btn bg-gradient-dark w-100 my-4 mb-2">Sign In</button>
+                                </div>
+                                <p class="text-sm mt-3 mb-0">Don't have an account? <a th:href="@{/sign_up}" class="text-dark font-weight-bolder">Sign up</a></p>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+<script>
+
+    function signIn()
+        {
+            // 디폴트 submit 방지
+            const formEl = document.getElementById('signInForm');
+            formEl.addEventListener('submit', (event) => {
+                event.preventDefault()
+            })
+
+            const inputEl = formEl.querySelectorAll("input")
+            if (checkNodeNotEmpty(inputEl))
+            {
+                formEl.submit()
+            }
+            else
+            {
+                alert("값을 채워주세요")
+            }
+        }
+
+
+        // 빈값 체크
+        function checkNodeNotEmpty(nodeEl) {
+
+            for (const el of nodeEl)
+            {
+                if(el.value=='')
+                {
+                    return false
+                }
+            }
+            return true
+        }
+</script>
+</div>
+
+
+</html>

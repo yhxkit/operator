@@ -1,0 +1,46 @@
+# maria db 설정
+spring:
+  datasource:
+    url: jdbc:mariadb://172.31.177.113:33906/test?useUnicode=true&characterEncoding=utf8_bin&characterSetResults=utf8_bin
+    username: logadm
+#    password: eEq6BHJNHGkrlPGzfHZLaw==
+    password: logadm913
+    driver-class-name: org.mariadb.jdbc.Driver
+    hikari:
+      pool-name: HikariCP
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 600000
+      max-lifetime: 1800000
+
+
+# 오라클 설정
+#spring:
+#  datasource:
+#    url: jdbc:oracle:thin:@10.0.14.244:7577:utfdevdb2
+#    username: apspg
+#    # KCP1234567890123 + devapspg
+#    password: ENC(q6rrfU15IIUE3Xv4LT8RNdJCgM5s/gFR)
+#    driver-class-name: oracle.jdbc.OracleDriver
+#    hikari:
+#      maximum-pool-size: 10
+#      minimum-idle: 5
+#      connection-timeout: 600000
+#      max-lifetime: 1800000
+
+
+
+
+#spring:
+#  datasource:
+#    hikari:
+#      glopg:
+#        username: apspg
+#        jdbc-url: jdbc:log4jdbc:oracle:thin:@10.0.14.244:7577:utfdevdb2
+#        password: gI1ufKXdUi3xsumDAjUSnA==
+#
+#        pool-name: glopgdb_hikaricp
+#        driver-class-name: net.sf.log4jdbc.DriverSpy
+
+
+# 신규 KMS 로컬 테스트용 암호화 키 Mvx7RT8TtQ0ScLAly7vuBw==   : devapspg

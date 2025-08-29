@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/layout_frame}">
+
+
+<div class="row justify-content-md-center" layout:fragment="content">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header pb-0">
+                <div class="row">
+                    <div class="col-6">
+                        <h6 style="display: inline-block" >등록된 계정 목록</h6>
+                    </div>
+                    <div class="col-6 text-end">
+                    </div>
+                </div>
+            </div>
+            <div class="card-body px-0 pt-0 pb-2">
+                <div class="table-responsive p-0">
+                    <table class="table align-items-center mb-0">
+                        <thead>
+                        <tr>
+                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                Account No
+                            </th>
+                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                Account Name
+                            </th>
+                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                등록일
+                            </th>
+                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                계정 상태
+                            </th>
+                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                상세 정보
+                            </th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="account : ${accountList}">
+
+                            <td class="align-middle text-center ">
+                                <h6 class="text-sm font-weight-bold mb-1" th:text="${account.accountNo}">accountNo</h6>
+                            </td>
+                            <td class="align-middle text-center ">
+                                <p class="text-sm font-weight-bold mb-1"  th:text="${account.accountName}">계정명</p>
+                            </td>
+
+                            <td class="align-middle text-center text-sm">
+                                <p class="text-sm text-secondary mb-1" th:text="${#temporals.format(account.registeredAt, 'yyyy-MM-dd HH:mm:ss')}">생성</p>
+                            </td>
+
+                            <td class="align-middle text-center ">
+                                <p class="text-sm font-weight-bold mb-1"  th:if="${account.status}" th:text="${account.status}">계정 현황</p>
+                                <p class="text-sm font-weight-bold mb-1"  th:unless="${account.status}" th:text="정상">계정 현황</p>
+                            </td>
+
+
+                            <td class="align-middle text-center text-sm">
+                                <a type="submit" class="btn btn-sm btn-outline-secondary px-4 mb-1" th:href="${'/adm/account/'+account.accountName}">
+                                    <span class="text-xs font-weight-bold">상세보기</span>
+                                </a>
+                            </td>
+
+                        </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+
+    </script>
+</div>
+
+</html>

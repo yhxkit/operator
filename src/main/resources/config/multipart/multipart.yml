@@ -1,0 +1,7 @@
+spring:
+  servlet:
+    multipart:
+      enabled: true
+      max-request-size: 50MB
+      max-file-size: 10MB
+      location: C:\log\uploadTest # 업로드파일 임시저장 경로 # 서버 파일 저장 경로로도 사용중

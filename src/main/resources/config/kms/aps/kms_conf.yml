@@ -1,0 +1,106 @@
+####################################
+# [ KMS 설정 ]
+####################################
+--- ## profile:local 설정
+spring:
+  config:
+    activate:
+      on-profile: local
+
+aps:
+  kms:
+    app_id: T.PG.API.APS
+    prop_home: src/main/resources/config/kms/aps/local
+    prop_name: kms-app-conf.properties
+
+    keyset_id:
+      aws_jwe_dec_new: KID-nYWj6BmzM4nBJZhF
+      aws_jwe_dec_old: KID-nYWj6BmzM4nBJZhF
+      ecom_jwe_dec_new: KID-iiXUIB0vo8LmrFHP
+      ecom_jwe_dec_old: KID-iiXUIB0vo8LmrFHP
+      aps_db_enc_dec: KID-FN9JrV6S6cJ572Os
+      aps_db_pw_key: KID-Rnof0voScMG5s0VO
+
+
+--- ## profile - test 설정
+spring:
+  config:
+    activate:
+      on-profile: test
+
+aps:
+  kms:
+    app_id: T.PG.API.APS
+    prop_home: /dat/newpg/prog/kmc
+    prop_name: kms-app-conf.properties
+
+    keyset_id:
+      aws_jwe_dec_new: KID-nYWj6BmzM4nBJZhF
+      aws_jwe_dec_old: KID-nYWj6BmzM4nBJZhF
+      ecom_jwe_dec_new: KID-iiXUIB0vo8LmrFHP
+      ecom_jwe_dec_old: KID-iiXUIB0vo8LmrFHP
+      aps_db_enc_dec: KID-FN9JrV6S6cJ572Os
+      aps_db_pw_key: KID-Rnof0voScMG5s0VO
+
+
+--- ## profile - staging 설정
+spring:
+  config:
+    activate:
+      on-profile: staging
+
+aps:
+  kms:
+    app_id: S.PG.API.APS
+    prop_home: /dat/newpg/prog/kmc
+    prop_name: kms-app-conf.properties
+
+    keyset_id:
+      aws_jwe_dec_new: KID-OB33reBKIZkAgjSq
+      aws_jwe_dec_old: KID-OB33reBKIZkAgjSq
+      ecom_jwe_dec_new: KID-c0Doz2P1E1D2l8jX
+      ecom_jwe_dec_old: KID-c0Doz2P1E1D2l8jX
+      aps_db_enc_dec: KID-Y1hhcsKgXxxm3nnj
+      aps_db_pw_key: KID-Za9QmWzFlNLIX111
+
+
+--- ## profile - real 설정
+spring:
+  config:
+    activate:
+      on-profile: real
+
+aps:
+  kms:
+    app_id: PG.API.APS
+    prop_home: /dat/newpg/prog/kmc
+    prop_name: kms-app-conf.properties
+
+    keyset_id:
+      aws_jwe_dec_new: KID-SwchzpteqyABBanl
+      aws_jwe_dec_old: KID-SwchzpteqyABBanl
+      ecom_jwe_dec_new: KID-KMQ9A2BMUILJZtWM
+      ecom_jwe_dec_old: KID-KMQ9A2BMUILJZtWM
+      aps_db_enc_dec: KID-QrUBAuea4tvD1USj
+      aps_db_pw_key: KID-VV9xr7G8m6OzysKW
+
+
+--- ## profile - dr 설정
+spring:
+  config:
+    activate:
+      on-profile: dr
+
+aps:
+  kms:
+    app_id: PG.API.APS
+    prop_home: /dat/newpg/prog/kmc
+    prop_name: kms-app-conf.properties
+
+    keyset_id:
+      aws_jwe_dec_new: KID-SwchzpteqyABBanl
+      aws_jwe_dec_old: KID-SwchzpteqyABBanl
+      ecom_jwe_dec_new: KID-KMQ9A2BMUILJZtWM
+      ecom_jwe_dec_old: KID-KMQ9A2BMUILJZtWM
+      aps_db_enc_dec: KID-QrUBAuea4tvD1USj
+      aps_db_pw_key: KID-VV9xr7G8m6OzysKW

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout_frame}" xmlns="http://www.w3.org/1999/html">
+
+<div layout:fragment="content">
+    <div class="row justify-content-md-center">
+
+        <div class="col-md-8 mt-4">
+            <div class="card text-center">
+                <div class="card-header pb-0 px-3">
+                    <h6 class="mb-0">개인키 비밀번호 해제하기</h6>
+                </div>
+
+                <form id="form1" name="dtoListTest" action="/ssl/deletePwFromPri" method="post"
+                      enctype="multipart/form-data" target="iframe1" >
+                    <div class="card-body pt-4 p-3 px-8">
+                        <ul class="list-group mt-6">
+                            <li class="list-group-item border-0 p-0 mb-0 bg-gray-100 border-radius-lg">
+                                <div class="d-flex flex-column">
+                                    <div class="input-group mb-3">
+                                        <input class="upload form-control" type="file" data-name="keyFile"/>
+                                    </div>
+                                </div>
+                            </li>
+
+                            <li class="list-group-item border-0 p-0 mb-0 bg-gray-100 border-radius-lg">
+                                <div class="d-flex flex-column">
+                                    <div class=" input-group mb-3">
+                                        <input class="upload form-control" type="text" data-name="keyPass" placeholder="개인키의 비밀번호를 입력하세요"/>
+                                    </div>
+                                </div>
+                            </li>
+
+                        </ul>
+
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-outline-primary" type="submit" onclick="javascript:checkBeforeUpload()">
+                            해제하기
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+
+        // 파일 업로드 후 암호 해제하여 다운로드
+        function uploadFiles(formEl) {
+            const formData = new FormData(formEl)
+            fetch(formEl.action, {
+                method: formEl.method,
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    const cd = response.headers.get('Content-Disposition')
+                    if (cd && cd.includes('attachment')) {
+                        const fileName = cd.split('filename=')[1]
+                        const blob = response.blob()
+
+                        blob.then(b => {
+                            const url = URL.createObjectURL(b)
+                            const aEl = document.createElement("a")
+                            aEl.href = url
+                            aEl.download = fileName
+                            aEl.click()
+                            URL.revokeObjectURL(url) // 다운로드 후 url 해제
+                        })
+                    }
+                } else {
+                    console.log(response)
+                    alert('암호화 해제 실패. 개인키와 비밀번호를 다시 확인하고 올려주세요')
+                }
+            }).catch(err => {
+                console.log('err', err)
+            })
+        }
+
+
+        // 파일 업로드 전 처리 로직 (빈 파일 칸 검증 / 객체 List로 받기 위한 순서 세팅 )
+        function checkBeforeUpload() {
+            // 디폴트 submit 방지
+            const formEl = document.querySelector('form')
+            formEl.addEventListener('submit', (event) => {
+                event.preventDefault()
+            })
+
+            const liEl = formEl.querySelectorAll('li')
+
+            // for( l of liEl )
+            for (let i = 0; i < liEl.length; i++) {
+                let l = liEl[i]
+                // 하나라도 비어있는 파일 선택칸이 있다면
+                if (!checkNodeNotEmpty(l)) {
+                    alert('파일을 선택하고 비밀번호를 입력하세요')
+                    return false
+                } else {
+                    // 객체 배열 순서 세팅
+                    setDtoVal(l, i)
+                }
+            }
+            // 파일 업로드
+            uploadFiles(formEl)
+        }
+
+
+        // 리스트로 객체를 보내기 위해서 순서 지정
+        function setDtoVal(liEl, order) {
+            let valueFields = liEl.querySelectorAll('[data-name]')
+
+            for (let i = 0; i < valueFields.length; i++) {
+                let l = valueFields[i]
+                l.setAttribute('name', l.dataset.name)
+            }
+        }
+
+        // 파일 선택칸이 비어있는지 확인
+        function checkNodeNotEmpty(liEl) {
+            // 선택된 파일이 없을 경우
+            const inputEl = liEl.querySelector('input[class*="upload"]')
+
+            if (inputEl.value == '') {
+                // console.log('파일을 선택하세요')
+                return false
+            }
+
+            return true
+        }
+
+
+    </script>
+    <iframe id="iframe1" name="iframe1" style="display: none"></iframe>
+
+
+</div>
+
+
+</html>

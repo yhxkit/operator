@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/layout_frame}">
+
+
+<div layout:fragment="content">
+    <div class="page-header align-items-start min-vh-50 pt-5 pb-11 m-3 border-radius-lg">
+        <span class="mask bg-gradient-dark opacity-6"></span>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-5 text-center mx-auto">
+                    <h1 class="text-white mb-2 mt-5">권한 목록</h1>
+                </div>
+            </div>
+
+            <div class="row  justify-content-center">
+                <div class="col-xl-4 col-lg-5 col-md-7 mx-auto">
+                    <div class="card z-index-0">
+                        <div class="card-header text-center pt-4">
+                            <h5>현재 사용 가능한 권한</h5>
+                        </div>
+                        <div class="card-body">
+
+                            <ul class="list-group" th:each="role : ${roleList}">
+                                <li class="list-group-item text-center" th:text="${role.roleName}"></li>
+                            </ul>
+
+                        </div>
+
+                        <div class="card-body">
+
+
+                            <form id="addRoleForm" role="form" method="POST" th:action="@{/adm/role/add}">
+                                <div class="mb-3">
+                                    <input type="text" class="form-control" name="roleName"
+                                           placeholder="신규 생성할 권한" aria-label="Role Name">
+                                </div>
+                                <div class="text-center">
+                                    <button onclick="addRole()" type="button" class="btn bg-gradient-dark w-100 my-4 mb-2">권한 생성</button>
+                                </div>
+                            </form>
+
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <script>
+        function addRole ()
+        {
+            // 디폴트 submit 방지
+            const formEl = document.getElementById('addRoleForm');
+            formEl.addEventListener('submit', (event) => {
+                event.preventDefault()
+            })
+
+            const inputEl = formEl.querySelector("input")
+            if (checkNodeNotEmpty(inputEl))
+            {
+
+                saveRole(formEl);
+
+            }else{
+                alert("값을 채워주세요 ")
+            }
+
+
+        }
+
+        function saveRole(formEl)
+        {
+
+            const formData = new FormData(formEl)
+
+            let xhr = new XMLHttpRequest()
+            xhr.open(formEl.method, formEl.action, true)
+
+            xhr.onload = (() => {
+                if (xhr.status == 200 )
+                {
+                    if(xhr.response == 'true')
+                    {
+                        alert("성공")
+                        location.reload();
+                    }
+                    else
+                    {
+                        alert("실패")
+                    }
+
+                }
+                else
+                {
+                    alert('이상 응답', xhr, xhr.statusText, xhr.responseText)
+                }
+            })
+
+            xhr.onerror = (() => {
+                alert('온 에러 ', xhr.status, xhr.statusText, xhr.responseText)
+            })
+
+            xhr.send(formData)
+        }
+
+
+        function checkNodeNotEmpty(nodeEl) {
+
+            if (nodeEl.value == '') {
+                return false
+            }
+
+            return true
+        }
+
+    </script>
+
+</div>
+
+
+
+
+</html>

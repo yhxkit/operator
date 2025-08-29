@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout_frame}" xmlns="http://www.w3.org/1999/html">
+
+<div layout:fragment="content">
+    <div class="row justify-content-md-center">
+
+        <div class="col-md-8 mt-4">
+            <div class="card text-center">
+                <div class="card-header pb-0 px-3">
+                    <h6 class="mb-0">CSR과 개인키 생성하기</h6>
+                </div>
+
+                <form id="form1" name="dtoListTest" action="/ssl/create" method="post"
+                      enctype="multipart/form-data" target="iframe1" >
+                    <div class="card-body pt-4 p-3 px-8">
+                        <ul class="list-group mt-6">
+                            <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg form-group">
+                                <div class="d-flex flex-column col">
+                                    <label for="serviceType">어떤 서비스 인증서를 저장할까요?</label>
+                                    <div class="dropdown input-group justify-content-md-center">
+                                        <select id="serviceType" class="btn btn- btn-outline-dark" data-name="svcName">
+                                            <option selected name="service" value="*">*.kcp.co.kr</option>
+                                            <option name="service" value="aps">aps.kcp.co.kr</option>
+                                            <option name="service" value="apl">apl.kcp.co.kr</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-outline-primary" type="submit" onclick="javascript:checkBeforeUpload()">
+                            생성하기
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+
+        // 파일 업로드 후 암호 해제하여 다운로드
+        function uploadFiles(formEl) {
+            const formData = new FormData(formEl)
+            fetch(formEl.action, {
+                method: formEl.method,
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    const cd = response.headers.get('Content-Disposition')
+                    if (cd && cd.includes('attachment')) {
+                        const fileName = cd.split('filename=')[1]
+                        const blob = response.blob()
+
+                        blob.then(b => {
+                            const url = URL.createObjectURL(b)
+                            const aEl = document.createElement("a")
+                            aEl.href = url
+                            aEl.download = fileName
+                            aEl.click()
+                            URL.revokeObjectURL(url) // 다운로드 후 url 해제
+                        })
+                    }
+                } else {
+                    console.log(response)
+                    alert('생성 실패.')
+                }
+            }).catch(err => {
+                console.log('err', err)
+            })
+        }
+
+
+        // 파일 업로드 전 처리 로직 (빈 파일 칸 검증 / 객체 List로 받기 위한 순서 세팅 )
+        function checkBeforeUpload() {
+            // 디폴트 submit 방지
+            const formEl = document.querySelector('form')
+            formEl.addEventListener('submit', (event) => {
+                event.preventDefault()
+            })
+
+            const liEl = formEl.querySelectorAll('li')
+
+            // for( l of liEl )
+            for (let i = 0; i < liEl.length; i++)
+            {
+                let l = liEl[i]
+
+                // 객체  세팅
+                setDtoVal(l, i)
+
+            }
+            // 파일 업로드
+            uploadFiles(formEl)
+        }
+
+
+        // 리스트로 객체를 보내기 위해서 순서 지정
+        function setDtoVal(liEl, order) {
+            let valueFields = liEl.querySelectorAll('[data-name]')
+
+            for (let i = 0; i < valueFields.length; i++) {
+                let l = valueFields[i]
+                l.setAttribute('name', l.dataset.name)
+            }
+        }
+
+
+    </script>
+    <iframe id="iframe1" name="iframe1" style="display: none"></iframe>
+
+
+</div>
+
+
+</html>

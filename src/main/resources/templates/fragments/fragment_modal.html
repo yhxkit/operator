@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+
+<div th:fragment="modal(flag, funcName, arg, title, content)">
+    <div class="col-md-4">
+<!--        모달 오픈 버튼   -->
+<!--        <button type="button" class="btn btn-block bg-gradient-primary mb-3" data-bs-toggle="modal"-->
+<!--                data-bs-target="#modal-default">Default-->
+<!--        </button>-->
+        <div class="modal fade" th:id="${'modal-default_'+flag}" tabindex="-1" role="dialog" th:aria-labelledby="${'modal-default_'+flag}"
+             aria-hidden="true">
+            <div class="modal-dialog modal- modal-dialog-centered modal-" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h6 class="modal-title" id="modal-title-default" th:text="${title}">Type your modal title</h6>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">×</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" >
+                        <p th:utext="${content}">Far far away, behind the word mountains, far from the countries Vokalia and Consonantia,
+                            there live the blind texts. Separated they live in Bookmarksgrove right at the coast of the
+                            Semantics, a large language ocean.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <a type="submit" class="btn bg-gradient-primary" th:data-func="${funcName}" th:data-arg="${arg}" onclick="execute(this)"  data-bs-dismiss="modal"> 확인</a>
+                        <a type="button" class="btn btn-link  ml-auto" data-bs-dismiss="modal">취소</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+
+        function execute(ele)
+        {
+            const functionName = ele.dataset.func
+            const arg = ele.dataset.arg
+
+            // console.log(functionName, arg)
+            window[functionName](arg)
+        }
+
+    </script>
+</div>
+
+
+</html>

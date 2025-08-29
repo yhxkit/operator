@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout_frame}" xmlns="http://www.w3.org/1999/html">
+
+<div layout:fragment="content">
+    <div class="row justify-content-md-center">
+
+        <div class="col-md-8 mt-4">
+            <div class="card text-center">
+                <div class="card-header pb-0 px-3">
+                    <h6 class="mb-0">SSL 인증서 구성 확인하기</h6>
+                </div>
+
+                <form id="form1" name="dtoListTest" action="/ssl/unionCertinfo" method="post"
+                      enctype="multipart/form-data" target="iframe1" >
+                    <div class="card-body pt-4 p-3 px-8">
+                        <ul class="list-group mt-6">
+                            <li class="list-group-item border-0 p-0 mb-0 bg-gray-100 border-radius-lg">
+                                <div class="d-flex flex-column">
+                                    <div>
+                                        <input name="svcName" value="SPLIT" hidden>
+                                        <input name="certType" value="SSL" hidden>
+                                    </div>
+                                    <div class="input-group mb-3">
+                                        <input class="upload form-control" type="file" data-name="certFile"/>
+                                    </div>
+                                </div>
+                            </li>
+
+
+                        </ul>
+
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-outline-primary" type="submit" onclick="javascript:checkBeforeUpload()">
+                            확인하기
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-2 mt-4"></div>
+        <div class="col-md-8 mt-4 card card-frame text-center" id="response-area" style="display: none">
+            <h6 id="cnt-area"></h6>
+            <div class="card-body table-responsive">
+                <table class="table align-items-center mb-0">
+                    <thead>
+                    <tr>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"></th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">CN / SERIAL NUMBER</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">EXPIRE</th>
+                        <th class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">ISSUER</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tbody1">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="col-md-2 mt-4"></div>
+    </div>
+
+
+    <script>
+
+        // 파일 업로드 후 분리하여 화면 표시
+        function uploadFiles(formEl)
+        {
+            const formData = new FormData(formEl)
+
+            let xhr = new XMLHttpRequest()
+            xhr.open(formEl.method, formEl.action, true)
+
+            xhr.onload = (() => {
+                if (xhr.status == 200) {
+                    // 파일 내용을 화면에 뿌려주기
+                    makeResponse(JSON.parse(xhr.response))
+                }
+                else if( xhr.status == 400 )
+                {
+                    console.log(xhr)
+                    alert("비정상적인 인증서입니다")
+                }
+                else
+                {
+                    console.log(xhr)
+                    alert('이상 응답', xhr, xhr.statusText, xhr.responseText)
+                }
+            })
+
+            xhr.onerror = (() => {
+                alert('온 에러 ', xhr.status, xhr.statusText, xhr.responseText)
+            })
+
+            xhr.send(formData)
+
+        }
+
+
+        // 화면 노출용 응답 생성
+        function makeResponse(resJson)
+        {
+            // 파일 내용을 화면에 뿌려주기
+
+            // const resJson = JSON.parse(xhr.response);
+            // console.log(resJson.length, "개를 받음")
+            let cnt = document.getElementById("cnt-area")
+            cnt.textContent = "인증서 구성 총 " + resJson.length + "개"
+
+            let tbody = document.getElementById("tbody1")
+
+            let allTr = tbody.querySelectorAll('tr')
+            allTr.forEach(item => {
+                item.remove()
+            })
+
+            resJson.forEach((item, idx) => {
+                // console.log(idx, '번째 항목의 내용 ', item.cn, item.expire, item.issuer, item.serialNumber)
+
+                const tr = document.createElement("tr")
+                tr.setAttribute("class", "text-sm");
+
+                const tdIdx = document.createElement("td")
+                tdIdx.textContent = idx
+                tr.appendChild(tdIdx)
+
+                const tdCnAndSer = document.createElement("td")
+
+                const pCn = document.createElement("h6")
+                pCn.setAttribute("class", "text-xs font-weight-bold mb-0")
+                pCn.textContent = item.cn
+
+                const pSerial = document.createElement("p")
+                pSerial.setAttribute("class", "text-xs text-secondary mb-0")
+                pSerial.textContent = item.serialNumber
+
+                tdCnAndSer.appendChild(pCn)
+                tdCnAndSer.appendChild(pSerial)
+
+                tr.appendChild(tdCnAndSer)
+
+
+                const tdExpire = document.createElement("td")
+                tdExpire.textContent = item.expire
+                tr.appendChild(tdExpire)
+
+                const tdIssuer = document.createElement("td")
+                tdIssuer.textContent = item.issuer
+                tr.appendChild(tdIssuer)
+
+                tbody.appendChild(tr)
+
+                document.getElementById("response-area").style.display = 'block'
+            })
+        }
+
+
+        // 파일 업로드 전 처리 로직 (빈 파일 칸 검증 / 객체 List로 받기 위한 순서 세팅 )
+        function checkBeforeUpload() {
+            // 디폴트 submit 방지
+            const formEl = document.querySelector('form')
+            formEl.addEventListener('submit', (event) => {
+                event.preventDefault()
+            })
+
+            const liEl = formEl.querySelectorAll('li')
+
+            // for( l of liEl )
+            for (let i = 0; i < liEl.length; i++) {
+                let l = liEl[i]
+                // 하나라도 비어있는 파일 선택칸이 있다면
+                if (!checkNodeNotEmpty(l)) {
+                    alert('모든 파일선택칸을 채워야합니다 ')
+                    return false
+                } else {
+                    // 객체 배열 순서 세팅
+                    setOrderForList(l, i)
+                }
+            }
+            // 파일 업로드
+            uploadFiles(formEl)
+        }
+
+
+        // 리스트로 객체를 보내기 위해서 순서 지정
+        function setOrderForList(liEl, order) {
+            let valueFields = liEl.querySelectorAll('[data-name]')
+
+            for (let i = 0; i < valueFields.length; i++) {
+                let l = valueFields[i]
+                l.setAttribute('name', 'list[' + order + '].' + l.dataset.name)
+            }
+        }
+
+        // 파일 선택칸이 비어있는지 확인
+        function checkNodeNotEmpty(liEl) {
+            // 선택된 파일이 없을 경우
+            const inputEl = liEl.querySelector('input[class*="upload"]')
+
+            if (inputEl.value == '') {
+                console.log('파일을 선택하세요')
+                return false
+            }
+
+            return true
+        }
+
+
+    </script>
+    <iframe id="iframe1" name="iframe1" style="display: none"></iframe>
+
+
+</div>
+
+
+</html>

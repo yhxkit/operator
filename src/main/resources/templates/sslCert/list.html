@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/layout_frame}">
+
+
+<div class="row justify-content-md-center" layout:fragment="content">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header pb-0">
+                <div class="row">
+                    <div class="col-6">
+                        <h6>DB SSL CERT LIST</h6>
+                    </div>
+                    <div class="col-6 text-end">
+                        <a class="btn btn-outline-primary" th:href="@{/ssl/merge}">인증서 통합</a>
+                        <a class="btn btn-outline-primary" th:href="@{/ssl/split}">인증서 구성 확인</a>
+                        <a class="btn btn-outline-secondary" th:href="@{/ssl/upload}">인증서 DB 업로드</a>
+                        <a class="btn btn-outline-secondary" th:href="@{/ssl/delpass}">개인키 암호 해제</a>
+                        <a class="btn btn-outline-secondary" th:href="@{/ssl/create}">CSR/개인키 쌍 생성</a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body px-0 pt-0 pb-2">
+                <div class="table-responsive p-0">
+                    <table class="table align-items-center mb-0">
+                        <thead>
+                        <tr>
+                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                IDX
+                            </th>
+                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                CN / SERIAL NUMBER / EXPIRE
+                            </th>
+                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
+                                Type / Svc Subject
+                            </th>
+                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                UPLOAD INFO
+                            </th>
+                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                Download
+                            </th>
+                            <th class="text-secondary opacity-7"></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="sslCert : ${certList}">
+                            <td class="align-middle text-center text-sm">
+                                <span class="text-secondary text-xs font-weight-bold" th:text="${sslCert.certIdx}">IDX</span>
+                            </td>
+                            <td class="align-middle text-center ">
+                                    <div class="d-flex flex-column justify-content-center">
+                                        <h6 class="mb-2 text-sm" th:text="${sslCert.cn}">CN</h6>
+                                        <p class="text-xs text-secondary mb-1" th:text="${sslCert.serialNumber}">SERIAL</p>
+                                        <p class="text-xs  font-weight-bold mb-1" th:text="${sslCert.expire+' 만료'}">EXPIRE</p>
+                                    </div>
+                            </td>
+                            <td class="align-middle text-center ">
+                                <p class="text-xs font-weight-bold mb-1"  th:text="${sslCert.subSvc+' '+sslCert.certType}">PURPOSE</p>
+                                <p class="text-xs text-secondary mb-1"  th:text="${sslCert.svcGroupName}">Service Group</p>
+                            </td>
+
+                            <td class="align-middle text-center text-sm">
+                                <p class="text-xs font-weight-bold mb-1"  th:text="${'업로더 : '+sslCert.uploadedBy}">Uploaded</p>
+                                <p class="text-xs text-secondary mb-1"  th:text="${'업로드 : '+sslCert.uploadedAt}">Uploaded</p>
+
+                            </td>
+
+                            <td class="align-middle text-center text-sm">
+                                <form method="post" th:action="${'/ssl/download/'+sslCert.certIdx}">
+                                    <a type="submit" class="btn btn-sm btn-outline-success px-4 mb-1" onclick="javascript:downloadCert(this)">
+                                        <span class="text-xs font-weight-bold">DOWNLOAD</span>
+                                    </a>
+                                </form>
+                             </td>
+
+                            <td class="align-middle">
+                                <form class="text-center" method="post" th:id="${'delform_'+sslCert.certIdx}" th:action="${'/ssl/delete/'+sslCert.certIdx}" th:fragment="delForm">
+                                    <div th:replace="~{fragments/fragment_modal::modal(${sslCert.certIdx}, 'deleteCert', ${sslCert.certIdx}, '삭제', '삭제하시겠습니까?')}"></div>
+                                    <a type="button" class="font-weight-bold text-xs text-danger mb-3"
+                                       data-toggle="tooltip" data-original-title="Delete Cert" data-bs-toggle="modal" th:data-bs-target="${'#modal-default_'+sslCert.certIdx}">
+                                        Delete
+                                    </a>
+                                </form>
+                            </td>
+                        </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // 인증서 다운로드
+        function downloadCert(submitEl)
+        {
+            // 디폴트 submit 방지
+            const formEl = submitEl.closest('form')
+            formEl.addEventListener('submit', (event) => {
+                event.preventDefault()
+            })
+
+            // 다운로드 요청
+            formEl.submit()
+        }
+
+
+        // 인증서 삭제
+        function deleteCert(certIdx)
+        {
+            // 디폴트 submit 방지
+            const formEl = document.getElementById('delform_'+certIdx);
+            formEl.addEventListener('submit', (event) => {
+                event.preventDefault()
+            })
+
+            // 삭제 요청
+            const formData = new FormData(formEl)
+
+            let xhr = new XMLHttpRequest()
+            xhr.open( formEl.method, formEl.action, true)
+
+            xhr.onload = (() => {
+                if(xhr.status == 200)
+                {
+                    location.href=''
+                }
+                else
+                {
+                    console.log(xhr)
+                    alert('이상 응답', xhr.status , xhr.statusText, xhr.responseText)
+                }
+            })
+
+            xhr.onerror = (() => {
+                console.log(xhr)
+                alert('온 에러 ', xhr.status , xhr.statusText, xhr.responseText)
+            })
+
+            xhr.send(formData)
+        }
+    </script>
+</div>
+
+</html>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/layout_frame}">
+
+<div class="row justify-content-md-center" layout:fragment="content">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header pb-0">
+                <div class="row">
+                    <div class="col-6">
+                        <h6 style="display: inline-block">DB 키링 List</h6>
+                    </div>
+
+                    <div class="col-6 text-end">
+                        <form method="post" class="text-center" th:id="${'createPgpForm'}" th:action="${'/pgp/create'}" th:fragment="createPgpForm" style="display: inline-block">
+                            <div th:replace="~{fragments/fragment_modal::modal(${''}, 'createPgp', ${''}, 'PGP ALERT', 'PGP 키링을 생성 하시겠습니까? <br /> 다운로드까지 30초 이내의 시간이 소요됩니다')}"></div>
+                            <a type="button" class="btn btn-outline-warning"
+                               data-toggle="tooltip" data-original-title="Create PGP Keyring" data-bs-toggle="modal"
+                               th:data-bs-target="${'#modal-default_'}">
+                                신규 생성
+                            </a>
+                        </form>
+
+                        <a class="btn btn-outline-primary" th:href="@{/pgp/merge}"> 키링 추가</a>
+                        <a class="btn btn-outline-primary" th:href="@{/pgp/remove}">키링 제거</a>
+                        <a class="btn btn-outline-primary" th:href="@{/pgp/split}"> 구성 확인</a>
+                        <a class="btn btn-outline-primary" th:href="@{/pgp/convert}">PGP 변환</a>
+                        <a class="btn btn-outline-secondary" th:href="@{/pgp/dbList}">DB PGP 목록</a>
+                        <a class="btn btn-outline-secondary" th:href="@{/pgp/dbSave}">DB PGP 저장</a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body px-0 pt-0 pb-2">
+                <div class="table-responsive p-0">
+                    <table class="table align-items-center mb-0">
+                        <thead>
+                        <tr>
+                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                PGP IDX
+                            </th>
+                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
+                                UPLOADER ID
+                            </th>
+                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
+                                COMMENT
+                            </th>
+                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                REGISTED
+                            </th>
+                            <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                                바로가기
+                            </th>
+                            <th class="text-secondary opacity-7"></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="pgpKey : ${dblist}">
+
+                            <td class="align-middle text-center ">
+                                <h6 class="text-sm font-weight-bold mb-1" th:text="${pgpKey.pgpIdx}">pgpIdx</h6>
+                            </td>
+                            <td class="align-middle text-center ">
+                                <p class="text-xs font-weight-bold mb-1"  th:text="${pgpKey.uploaderId}">uploaderId</p>
+                            </td>
+                            <td class="align-middle text-center ">
+                                <p class="text-xs font-weight-bold mb-1"  th:text="${pgpKey.comment}">comment</p>
+                            </td>
+
+                            <td class="align-middle text-center text-sm">
+                                <p class="text-xs text-secondary mb-1" th:text="${'업로드일 : '+ #temporals.format(pgpKey.registered, 'yyyy-MM-dd HH:mm:ss')}">저장일</p>
+                            </td>
+
+                            <td class="align-middle text-center text-sm">
+                                <a type="submit" class="btn btn-outline-secondary px-4 mb-1" th:href="${'/pgp/list?pgpIdx='+pgpKey.pgpIdx}">
+                                    <span class="text-secondary text-xs font-weight-bold">상세보기</span>
+                                </a>
+                            </td>
+
+                            <td class="align-middle">
+                                <form class="text-center" method="post" th:id="${'delform_'+pgpKey.pgpIdx}" th:action="${'/pgp/delete/'+pgpKey.pgpIdx}" th:fragment="delForm">
+                                    <div th:replace="~{fragments/fragment_modal::modal(${pgpKey.pgpIdx}, 'deletePGP', ${pgpKey.pgpIdx}, '삭제', '삭제하시겠습니까?')}"></div>
+                                    <a type="button" class="font-weight-bold text-xs text-danger mb-3" data-toggle="tooltip" data-original-title="Delete Cert" data-bs-toggle="modal" th:data-bs-target="${'#modal-default_'+pgpKey.pgpIdx}">
+                                        Delete
+                                    </a>
+                                </form>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function deletePGP(pgpIdx)
+        {
+
+            // 디폴트 submit 방지
+            const formEl = document.getElementById('delform_'+pgpIdx);
+            formEl.addEventListener('submit', (event) => {
+                event.preventDefault()
+            })
+
+            // 삭제 요청
+            const formData = new FormData(formEl)
+
+            let xhr = new XMLHttpRequest()
+            xhr.open( formEl.method, formEl.action, true)
+
+            xhr.onload = (() => {
+                if(xhr.status == 200)
+                {
+                    location.href=''
+                }
+                else
+                {
+                    console.log(xhr)
+                    alert('이상 응답', xhr.status , xhr.statusText, xhr.responseText)
+                }
+            })
+
+            xhr.onerror = (() => {
+                console.log(xhr)
+                alert('온 에러 ', xhr.status , xhr.statusText, xhr.responseText)
+            })
+
+            xhr.send(formData)
+        }
+    </script>
+</div>
+
+</html>

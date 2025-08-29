@@ -1,0 +1,91 @@
+####################################
+# [ KMS 설정 ]
+####################################
+--- ## profile:local 설정
+spring:
+  config:
+    activate:
+      on-profile: local
+
+gpl:
+  kms:
+    app_id: T.PG.API.GPL
+    prop_home: src/main/resources/config/kms/gpl/local
+    prop_name: kms-app-conf.properties
+
+    keyset_id:
+      pub_id: KID-emMiRFzluJVsLMYn
+      pri_id: KID-PK45nkQMJA2OS1j8
+      db_conf_id: KID-Rnof0voScMG5s0VO
+
+
+--- ## profile - test 설정
+spring:
+  config:
+    activate:
+      on-profile: test
+gpl:
+  kms:
+    app_id: T.PG.API.GPL
+    prop_home: /dat1/newpg/prog/kmc
+    prop_name: kms-app-conf.properties
+
+    keyset_id:
+      pub_id: KID-emMiRFzluJVsLMYn
+      pri_id: KID-PK45nkQMJA2OS1j8
+      db_conf_id: KID-Rnof0voScMG5s0VO
+
+
+
+--- ## profile - staging 설정
+spring:
+  config:
+    activate:
+      on-profile: staging
+
+gpl:
+  kms:
+    app_id: S.PG.API.GPL
+    prop_home: /dat1/newpg/prog/kmc
+    prop_name: kms-app-conf.properties
+
+    keyset_id:
+      pub_id: KID-IZ3Lib6q7jFFmf6a
+      pri_id: KID-PpBVmLc3kDefm6Fn
+      db_conf_id: KID-Za9QmWzFlNLIX111
+
+
+--- ## profile - real 설정
+spring:
+  config:
+    activate:
+      on-profile: real
+
+gpl:
+  kms:
+    app_id: PG.API.GPL
+    prop_home: /dat1/newpg/prog/kmc
+    prop_name: kms-app-conf.properties
+
+    keyset_id:
+      pub_id: KID-Eo9b898ieQzhBbFO
+      pri_id: KID-GAAhlJ1wQwU4XDLG
+      db_conf_id: KID-VV9xr7G8m6OzysKW
+
+
+--- ## profile - dr 설정
+spring:
+  config:
+    activate:
+      on-profile: dr
+
+gpl:
+  kms:
+    app_id: PG.API.GPL
+    prop_home: /dat1/newpg/prog/kmc
+    prop_name: kms-app-conf.properties
+
+    keyset_id:
+      pub_id: KID-Eo9b898ieQzhBbFO
+      pri_id: KID-GAAhlJ1wQwU4XDLG
+      db_conf_id: KID-VV9xr7G8m6OzysKW

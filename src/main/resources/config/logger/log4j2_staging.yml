@@ -1,0 +1,185 @@
+Configutation:
+  name: Default
+  status: info
+  monitorInterval: 30    # 30분 주기로 log4j 파일 변경여부 확인
+  Properties:
+    Property:
+      - name: COUT_PATH
+        value: '/dat/newpg/logs/operator'  ## catalina.out 로그 경로.
+      - name: COUT_PATTERN
+        value: '[%d{yyMMdd HH:mm:ss.SSS}][%-1.-1level] %msg%n'
+      - name: LOG_PATH
+        value: '/dat/newpg/logs/operator'           ## 서비스 로그 경로
+      - name: LOG_PATTERN
+        value: '[%d{yyMMdd HH:mm:ss.SSS}][%-1.-1level] %msg%n'
+      - name: FILE_SIZE
+        value: 400 MB
+
+  Appenders:
+
+    Console:
+      - name: console
+        target: SYSTEM_OUT
+        PatternLayout:
+          pattern: ${LOG_PATTERN}
+
+    RollingFile:
+
+      #############################
+      ## CATALINA 로그
+      #############################
+      - name: catalina.log
+        fileName: ${COUT_PATH}/catalina.log
+        filePattern: ${COUT_PATH}/%d{yyMM}/%d{dd}_catalina.log.%i
+        append: true
+        PatternLayout:
+          pattern: ${COUT_PATTERN}
+        Policies:
+          SizeBasedTriggeringPolicy:
+            size: ${FILE_SIZE}
+          TimeBasedTriggeringPolicy:
+            Interval: 1
+            modulate: true
+
+
+
+      #############################
+      ##  API 로그
+      #############################
+      - name: API_INFO
+        fileName: ${LOG_PATH}/api_info.log
+        filePattern: ${LOG_PATH}/%d{yyMM}/%d{dd}_api_info.log.%i
+        append: true
+        PatternLayout:
+          pattern: ${LOG_PATTERN}
+        Policies:
+          SizeBasedTriggeringPolicy:
+            size: ${FILE_SIZE}
+          TimeBasedTriggeringPolicy:
+            Interval: 1
+            modulate: true
+
+      - name: API_DATA
+        fileName: ${LOG_PATH}/api_data.log
+        filePattern: ${LOG_PATH}/%d{yyMM}/%d{dd}_api_data.log.%i
+        append: true
+        PatternLayout:
+          pattern: ${LOG_PATTERN}
+        Policies:
+          SizeBasedTriggeringPolicy:
+            size: ${FILE_SIZE}
+          TimeBasedTriggeringPolicy:
+            Interval: 1
+            modulate: true
+
+      - name: API_ERR
+        fileName: ${LOG_PATH}/api_err.log
+        filePattern: ${LOG_PATH}/%d{yyMM}/%d{dd}_api_err.log.%i
+        append: true
+        PatternLayout:
+          pattern: ${LOG_PATTERN}
+        Policies:
+          SizeBasedTriggeringPolicy:
+            size: ${FILE_SIZE}
+          TimeBasedTriggeringPolicy:
+            Interval: 1
+            modulate: true
+
+      - name: API_SQL
+        fileName: ${LOG_PATH}/api_sql.log
+        filePattern: ${LOG_PATH}/%d{yyMM}/%d{dd}_api_sql.log.%i
+        append: true
+        PatternLayout:
+          pattern: ${LOG_PATTERN}
+        Policies:
+          SizeBasedTriggeringPolicy:
+            size: ${FILE_SIZE}
+          TimeBasedTriggeringPolicy:
+            Interval: 1
+            modulate: true
+
+
+      # MNT 로그
+      - name: MNT
+        fileName: ${LOG_PATH}/mnt.log
+        filePattern: ${LOG_PATH}/%d{yyMM}/%d{dd}_mnt.log.%i
+        append: true
+        PatternLayout:
+          pattern: ${LOG_PATTERN}
+        Policies:
+          SizeBasedTriggeringPolicy:
+            size: ${FILE_SIZE}
+          TimeBasedTriggeringPolicy:
+            Interval: 1
+            modulate: true
+
+  Loggers:
+    Root:
+      level: info
+      appenderRef:
+        - ref: console
+
+    Logger:
+      - name: catalina.log
+        additivity: false
+        level: info
+        AppenderRef:
+          - ref: catalina.log
+
+      - name: jdbc
+        additivity: false
+        level: ERROR
+
+      - name: com.zaxxer.hikari
+        additivity: false
+        level: ERROR
+
+      - name: jdbc.sqlonly
+        additivity: false
+        level: ERROR
+        AppenderRef:
+          - ref: API_SQL
+
+      - name: jdbc.sqltiming
+        additivity: false
+        level: ERROR
+        AppenderRef:
+          - ref: API_SQL
+
+      - name: jdbc.connection
+        additivity: false
+        level: ERROR
+        AppenderRef:
+          - ref: API_SQL
+
+
+      - name: API_INFO
+        additivity: false
+        level: INFO
+        AppenderRef:
+          - ref: API_INFO
+
+      - name: API_DATA
+        additivity: false
+        level: INFO
+        AppenderRef:
+          - ref: API_DATA
+
+      - name: API_ERR
+        additivity: false
+        level: error
+        AppenderRef:
+          - ref: API_ERR
+
+      - name: API_SQL
+        additivity: false
+        level: INFO
+        AppenderRef:
+          - ref: API_SQL
+
+
+      - name: MNT
+        additivity: false
+        level: INFO
+        AppenderRef:
+          - ref: MNT

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/layout_frame}" xmlns="http://www.w3.org/1999/html">
+
+<div layout:fragment="content">
+    <div class="row justify-content-md-center">
+
+        <div class="col-md-10 mt-4">
+            <div class="card text-center">
+                <div class="card-header pb-0 px-3">
+                    <h6 class="mb-0">PGP 키링 구성 확인하기</h6>
+                </div>
+
+                <form id="form1" name="dtoListTest" action="/pgp/keyInfo" method="post"
+                      enctype="multipart/form-data" target="iframe1" >
+                    <div class="card-body pt-4 p-3 px-2">
+                        <ul class="list-group mt-2">
+                            <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg  justify-content-md-center">
+                                <div class="d-flex flex-column">
+                                    <label class=" text-dark text-gradient form-control-plaintext px-4">PUBLIC KEY RING</label>
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <div>
+                                        <input data-name="keyRingType" value="PUBLIC" hidden>
+                                        <input data-name="svcType" value="PGP" hidden>
+                                    </div>
+                                    <div class="input-group mb-3">
+                                        <input class="upload form-control" type="file" data-name="keyRingFile"/>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg  justify-content-md-center">
+                                <div class="d-flex flex-column">
+                                    <label class=" text-dark text-gradient form-control-plaintext px-4">PRIVATE KEY RING</label>
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <div>
+                                        <input data-name="keyRingType" value="PRIVATE" hidden>
+                                        <input data-name="svcType" value="PGP" hidden>
+                                    </div>
+                                    <div class="input-group mb-3">
+                                        <input class="upload form-control" type="file" data-name="keyRingFile"/>
+                                    </div>
+                                </div>
+                            </li>
+                        </ul>
+
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-outline-primary" type="submit" onclick="checkBeforeUpload()">확인하기</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row  justify-content-md-center">
+        <div class="col-md-10 mt-4 card card-frame text-center" id="response-area" style="display: none">
+            <h6 id="cnt-area"></h6>
+            <div class="card-body table-responsive">
+                <table class="table align-items-center mb-0">
+                    <thead>
+                    <tr>
+                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                            KEY ID / User ID
+                        </th>
+                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7 ps-2">
+                            Master / Sub
+                        </th>
+                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                            생성일 / 만료일
+                        </th>
+                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                            유효여부
+                        </th>
+                        <th class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7">
+                            비밀키 유무
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody id="tbody1">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+
+        // 파일 업로드 후 구성을 화면에 표시
+        function fetchUpload(formEl)
+        {
+            const formData = new FormData(formEl)
+
+            fetch(formEl.action, {
+                method: formEl.method,
+                body: formData
+            }).then(response => {
+                if(response.status == 200) // 정상 처리
+                {
+                    readStream(response.body.getReader(), new TextDecoder(), '')
+                }
+                else if(response.status == 400)
+                {
+                    alert("비정상적인 인증서입니다")
+                }
+                else
+                {
+                    alert("오류입니다. 필요 시 담당자에게 확인 요청하세요( 응답 스테이터스 : "+response.status+")")
+                }
+                return response;
+            }).catch(error => console.log('err', error))
+        }
+
+
+        // 응답 스트림을 읽어서 화면에 응답 구성
+        function readStream (reader, decoder, resultStr)
+        {
+            reader.read().then(({ done, value }) => {
+                if( done )
+                {
+                    makeResponse(JSON.parse(resultStr))
+                }
+                else
+                {
+                    resultStr += decoder.decode( value, {stream: true})
+                    readStream(reader, decoder, resultStr) // 재귀반복
+                }
+            }).catch(err => {
+                console.log('스트림 읽기 오류', err)
+            })
+        }
+
+
+        // 파일 업로드 전 처리 로직 (빈 파일 칸 검증 / 객체 List로 받기 위한 순서 세팅 )
+        function checkBeforeUpload()
+        {
+            // 디폴트 submit 방지
+            const formEl = document.querySelector('form')
+            formEl.addEventListener('submit', (event) => {
+                event.preventDefault()
+            })
+
+            const liEl = formEl.querySelectorAll('li')
+
+            for (let i = 0; i < liEl.length; i++)
+            {
+                let l = liEl[i]
+                // 하나라도 비어있는 파일 선택칸이 있다면
+                if (!checkNodeNotEmpty(l))
+                {
+                    alert('모든 파일선택칸을 채워야합니다 ')
+                    return false
+                }
+                else
+                {
+                    // 객체 배열 순서 세팅
+                    setOrderForList(l, i)
+                }
+            }
+            // 파일 업로드
+            fetchUpload(formEl)
+        }
+
+
+        // 리스트로 객체를 보내기 위해서 순서 지정
+        function setOrderForList(liEl, order) {
+            let valueFields = liEl.querySelectorAll('[data-name]')
+
+            for (let i = 0; i < valueFields.length; i++)
+            {
+                let l = valueFields[i]
+                l.setAttribute('name', 'list[' + order + '].' + l.dataset.name)
+            }
+        }
+
+
+        // 파일 선택칸이 비어있는지 확인
+        function checkNodeNotEmpty(liEl)
+        {
+            // 선택된 파일이 없을 경우
+            const inputEl = liEl.querySelector('input[class*="upload"]')
+
+            if (inputEl && inputEl.value == '')
+            {
+                // console.log('파일을 선택하세요')
+                return false
+            }
+            return true
+        }
+
+
+        // 응답 구성하기
+        function makeResponse( resJson )
+        {
+            let cnt = document.getElementById("cnt-area")
+            cnt.textContent = "공개키링 구성 총 " + resJson.length + "개"
+
+            let tbody = document.getElementById("tbody1")
+
+            let allTr = tbody.querySelectorAll('tr')
+
+            allTr.forEach(item => {
+                item.remove()
+            })
+
+            resJson.forEach((item, idx) => {
+                // console.log(idx, '번째 항목의 내용 ', (item.keyId), item.userId, item.master,  item.validDays, item.creationTime, item.expireTime, item.validNow, item.hasPrivateKey)
+                makeTableBody(item, idx, tbody)
+                document.getElementById("response-area").style.display = 'block'
+            })
+        }
+
+
+        // 테이블 바디 구성하기
+        function makeTableBody (item, idx, tbody)
+        {
+            const tr = document.createElement("tr")
+            tr.setAttribute("class", "text-sm");
+
+            const tdIds = document.createElement("td")
+            tdIds.setAttribute("class", "align-middle text-center")
+
+            const h6KeyId =document.createElement("h6")
+            h6KeyId.setAttribute("class", "text-sm font-weight-bold mb-1")
+            h6KeyId.textContent = (item.keyId)
+
+            const pUserId =document.createElement("p")
+            pUserId.setAttribute("class", "mb-2 text-xs" )
+            pUserId.setAttribute("style", "word-wrap: break-word; overflow-wrap: break-word; word-break: break-word; white-space: pre-wrap")
+            pUserId.textContent = item.userId
+
+            tdIds.appendChild(h6KeyId)
+            tdIds.appendChild(pUserId)
+            tr.appendChild(tdIds)
+
+            const tdMasterAndValid = document.createElement("td")
+            tdMasterAndValid.setAttribute("class", "align-middle text-center")
+
+            const pIsMaster = document.createElement("p")
+            pIsMaster.setAttribute("class", "text-xs font-weight-bold mb-1")
+            const isMaster = item.master === true ? 'MASTER' : 'SUB'
+            pIsMaster.textContent = isMaster
+
+            const pValidDays = document.createElement("p")
+            pValidDays.setAttribute("class", "text-xs text-secondary mb-1")
+            pValidDays.textContent = item.validDays
+
+            tdMasterAndValid.appendChild(pIsMaster)
+            tdMasterAndValid.appendChild(pValidDays)
+            tr.appendChild(tdMasterAndValid)
+
+            const tdDates = document.createElement("td")
+            tdDates.setAttribute("class", "align-middle text-center text-sm")
+
+            const pCreation = document.createElement("p")
+            pCreation.setAttribute("class", "text-xs text-secondary mb-1")
+            pCreation.textContent = new Date(item.creationTime).toISOString()
+
+            const pExpire = document.createElement("p")
+            pExpire.setAttribute("class", "text-xs font-weight-bold mb-1")
+            pExpire.textContent = new Date(item.expireTime).toISOString()
+
+            tdDates.appendChild(pCreation)
+            tdDates.appendChild(pExpire)
+            tr.appendChild(tdDates)
+
+            const tdIsValidNow = document.createElement("td")
+            tdIsValidNow.setAttribute("class", "align-middle text-center ")
+
+            const pIsValidNow = document.createElement("p")
+            pIsValidNow.setAttribute("class", "mb-2 text-sm")
+            const isValidNow = item.validNow === true ? '사용가능' : '만료'
+            pIsValidNow.textContent = isValidNow
+
+            tdIsValidNow.appendChild(pIsValidNow)
+            tr.appendChild(tdIsValidNow)
+
+            const tdHasPriv = document.createElement("td")
+            tdHasPriv.setAttribute("class", "align-middle text-center ")
+
+            const h6HasPriv = document.createElement("h6")
+            h6HasPriv.setAttribute("class", "mb-2 text-sm")
+            h6HasPriv.textContent = item.hasPrivateKey === true ? 'O' : 'X'
+
+            tdHasPriv.appendChild(h6HasPriv)
+            tr.appendChild(tdHasPriv)
+
+            tbody.appendChild(tr)
+
+        }
+
+
+    </script>
+    <iframe id="iframe1" name="iframe1" style="display: none"></iframe>
+
+
+</div>
+
+
+</html>

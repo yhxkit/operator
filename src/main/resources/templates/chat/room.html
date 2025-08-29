@@ -1,0 +1,373 @@
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout_frame}" xmlns="http://www.w3.org/1999/html">
+
+
+<div layout:fragment="content">
+    <div class="page-header align-items-start min-vh-50 pt-3 pb-3 m-3 border-radius-lg">
+        <span class="mask bg-gradient-dark opacity-6"></span>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-2 text-center mx-auto">
+                    <h5 class="text-white mb-2 mt-2">Chat Room</h5>
+                </div>
+            </div>
+
+            <div class="row  justify-content-center">
+                <div class="mx-auto">
+                    <div class="card z-index-0 max-height-600" >
+                        <div class="card-header ps text-sm">
+                            <span>인원</span>
+                            <span class="participants"></span>
+                        </div>
+                        <div class="card-body content-left" style="overflow-y: auto;">
+                            <div class="content">
+                                <!-- 파일은 매일 초기화-->
+                            </div>
+                        </div>
+                        <div class="card-footer d-flex flex-column input-group">
+                            <div class="input-group">
+                                <span class="input-group-text">메시지</span>
+                                <textarea class="form-control" id="msg"></textarea>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="container mt-3 d-flex ">
+                        <div class="justify-content-md-start d-flex col-md-2">
+                            <form class="text-center" method="post" id="chatLogForm" action="/chat/log" onsubmit="return false;">
+                                <button type="button" onclick="getModal()" class="btn mt-3 form-control bg-gradient-faded-white btn-block mb-3"
+                                        data-toggle="tooltip" data-bs-toggle="modal" th:data-bs-target="${'#exampleModalLong'}">
+                                    지난 로그 보기
+                                </button>
+                            </form>
+                        </div>
+
+
+                        <div class="justify-content-md-end input-group d-flex ">
+                            <div class="d-flex col-md-5 justify-content-md-end">
+                                <form method="POST" action="/chat/upload" id="uploadForm" enctype="multipart/form-data" target="iframe1">
+                                    <input class="upload form-control" type="file" name="file"/>
+                                    <button type="submit" class="form-control bg-gradient-faded-white" onclick="sendFileWithMultipart()">업로드</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+    <script>
+        // 메시지 입력 관련 매핑
+        const msgEl = document.querySelector('#msg')
+
+        msgEl.addEventListener('keydown', function (event)
+        {
+            if (event.key === 'Enter' && !event.shiftKey )
+            {
+                event.preventDefault()
+                let msg = msgEl.value
+                msgEl.value = ''
+
+                if(msg !== '')
+                {
+                    sendMsg(msg)
+                }
+            }
+        })
+
+
+        // 메시지 전송 관련
+        let socket = new WebSocket(`ws://${location.host}/chatty`)
+
+        socket.onopen = function () {
+            // console.log("온 오픈")
+        }
+        socket.onmessage = function (event) {
+            // console.log("온 메시지")
+            const data = JSON.parse(event.data)
+            // console.log(data)
+
+            if(data.hasOwnProperty('clients')) // 구성원
+            {
+                const clients = data.clients
+                const alertMsg = data.alert
+
+                // console.log(clients)
+                document.querySelector(".participants").innerText = clients
+
+                createNewAlertArea(alertMsg)
+            }
+            else if(data.hasOwnProperty('downloadable'))
+            {
+                createNewDownloadLink(false, data.time, data.clientIp, data.downloadable)
+            }
+            else // 일반 메시지
+            {
+                createNewMsgArea(false, data.time, data.clientIp, data.msg)
+            }
+        }
+        socket.onclose =  function () {
+            // console.log("온 클로즈")
+        }
+        socket.onerror = function (error) {
+            // console.log("온 에러")
+            console.log("에러 발생", error)
+        }
+
+
+        function sendMsg (msg)
+        {
+            if( socket.readyState === WebSocket.OPEN ){
+                socket.send(msg)
+            }
+            else
+            {
+                alert("웹 소켓이 열리지 않았습니다")
+                location.reload()
+            }
+        }
+
+
+        async function getModal()
+        {
+            // 디폴트 submit 방지
+            const formEl = document.getElementById('chatLogForm');
+            formEl.addEventListener('submit', (event) => {
+                event.preventDefault()
+            })
+
+            //  요청
+            await getOldLog (formEl)
+         }
+
+
+        async function getOldLog (formEl)
+        {
+            await fetch(formEl.action, {
+                method: formEl.method
+            }).then(async response => {
+                if (response.ok) {
+                    const logBlob = await response.blob()
+                    const logTxt = await logBlob.text()
+                    await showLog(logTxt)
+                } else {
+                    console.log(response)
+                    alert('로그 불러오기 실패. 필요 시 담당자에게 확인 요청하세요( 응답 스테이터스 : ' + response.status + ')')
+                }
+            }).catch(err => {
+                console.log('err', err)
+                alert("오류입니다")
+            })
+        }
+
+
+        async function showLog(logTxt)
+        {
+            const parsedLogJson = await parseLog(logTxt)
+
+            let modal = document.getElementById('exampleModalLong')
+            // console.log('modal', modal)
+            let contentP = document.getElementById('modal-body-default')
+            // console.log('modal-body', contentP)
+
+
+            let strResult = ''
+
+            parsedLogJson.map(line => {
+
+                strResult += '<p>'
+                if(line.hasOwnProperty('msg')) // 기본 채팅 내용
+                {
+                    let msgLine = "["+line.time + "] [" + line.clientIp + "] " + line.msg + '<br/>'
+                    strResult += msgLine
+                }
+                else if(line.hasOwnProperty('alert')) //입퇴장 메시지
+                {
+                    strResult += '♩♪ ' + line.alert+ ' ♬ <br/>'
+                }
+                else if(line.hasOwnProperty('downloadable')) // 다운로더블 파일 링크
+                {
+
+                    const downObj = JSON.parse(line.downloadable)
+                    let downName = downObj.fileName
+                    let downL = downObj.downLink
+
+                    let msgLine = "["+line.time + "] [" + line.clientIp + "] " + ' <button><a href='+downL+'>'+ downName + '</a></button><br/>'
+                    strResult += msgLine
+                }
+                strResult += '</p>'
+            })
+
+            console.log(strResult)
+            contentP.innerHTML = strResult
+
+            // 로그 기록 재렌더링
+            contentP.style.display = 'none'
+            void contentP.offsetHeight
+            contentP.style.display = ''
+        }
+
+
+        async function parseLog(logTxt)
+        {
+            const lines = logTxt.trim().split(/\r\n|\r|\n/) // 개행문자 기준으로 라인단위 파싱
+            const parsedLog = lines.map(l => {
+                const match = l.match(/^\[(\d{2}:\d{2}:\d{2})\]\s+(.*)$/) // [hh:MM:ss] 시간 표현식 뒤로 문자열
+                if (!match) {
+                    return null
+                } else {
+                    const logTime = match[1]
+                    const logJson = match[2]
+
+                    const jsonData = JSON.parse(logJson)
+                    jsonData.time = logTime
+
+                    return {...jsonData}
+                }
+            })
+            return parsedLog.filter(Boolean) // 제대로 파싱된 결과값만 리턴
+        }
+
+
+        function sendFileWithMultipart ()
+        {
+            const uploadFormEl = document.getElementById('uploadForm')
+            uploadFormEl.addEventListener('submit', (event) => {
+                event.preventDefault()
+            })
+
+            const file = document.querySelector('.upload').files[0]
+
+            if( file )
+            {
+                let formData = new FormData(uploadFormEl)
+
+                let xhr = new XMLHttpRequest()
+                xhr.open( uploadFormEl.method, uploadFormEl.action, true)
+
+                xhr.onload = (() => {
+
+                    if(xhr.status === 200)
+                    {
+                        let fileDelimiter = 'HereIsTheDelimiterForDownloadFile:'
+                        let fileName = xhr.responseText
+                        let downlink = `http://${location.host}/chat/download/` + xhr.responseText
+
+                        let fileJsonData = {'fileName':fileName, 'downLink':downlink};
+
+                        sendMsg(fileDelimiter + JSON.stringify(fileJsonData))
+                    }
+                    else
+                    {
+                        console.log(xhr)
+                        alert('업로드 실패. 이상 응답', xhr.status , xhr.statusText, xhr.responseText)
+                    }
+                })
+
+                xhr.onerror = (() => {
+                    console.log(xhr)
+                    alert('업로드 실패. 온 에러 ', xhr.status , xhr.statusText, xhr.responseText)
+                })
+
+                xhr.send(formData)
+            }
+        }
+
+
+        function createNewAlertArea (msg)
+        {
+            let newDiv = document.createElement('div')
+            newDiv.classList.add('border-radius-md')
+            newDiv.classList.add('text-center')
+
+            let newP = document.createElement('p')
+            newP.innerText = msg
+
+            newDiv.appendChild(newP)
+
+            let content = document.querySelector('.content')
+            content.appendChild(newDiv)
+
+            const body = document.querySelector('.card-body')
+            body.scrollTop = body.scrollHeight
+        }
+
+
+        function createNewDownloadLink( isMyself, time, user, fileJsonStr )
+        {
+            let newDiv = document.createElement('div')
+            const bgColor = isMyself === true ? 'bg-secondary-subtle' : 'bg-primary-subtle'
+            newDiv.classList.add(bgColor)
+            newDiv.classList.add('border-radius-md')
+
+            let newTimeSpan = document.createElement('span')
+            newTimeSpan.innerText = '['+time+'] '
+
+            let newNameSpan = document.createElement('span')
+            newNameSpan.innerText = '['+user+'] '
+
+
+            let json = JSON.parse(fileJsonStr)
+
+            let newA = document.createElement('a')
+            newA.innerText = json.fileName
+            newA.href = json.downLink
+            let newLink =document.createElement('button')
+            newLink.appendChild(newA)
+            let newB = document.createElement('p')
+            newB.appendChild(newLink)
+            newB.prepend(newNameSpan)
+            newB.prepend(newTimeSpan)
+
+            newDiv.appendChild(newB)
+
+            let content = document.querySelector('.content')
+            content.appendChild(newDiv)
+
+
+            const body = document.querySelector('.card-body')
+            body.scrollTop = body.scrollHeight
+        }
+
+
+        function createNewMsgArea ( isMyself, time, user, msg )
+        {
+            let newDiv = document.createElement('div')
+            const bgColor = isMyself === true ? 'bg-secondary-subtle' : 'bg-primary-subtle'
+            newDiv.classList.add(bgColor)
+            newDiv.classList.add('border-radius-md')
+
+            let newTimeSpan = document.createElement('span')
+            newTimeSpan.innerText = '['+time+'] '
+
+            let newNameSpan = document.createElement('span')
+            newNameSpan.innerText = '['+user+'] '
+
+            let newP = document.createElement('p')
+            newP.innerText = msg
+            newP.prepend(newNameSpan)
+            newP.prepend(newTimeSpan)
+
+            newDiv.appendChild(newP)
+
+            let content = document.querySelector('.content')
+            content.appendChild(newDiv)
+
+
+            const body = document.querySelector('.card-body')
+            body.scrollTop = body.scrollHeight
+        }
+    </script>
+
+    <iframe id="iframe1" name="iframe1" style="display: none"></iframe>
+    <div th:replace="~{fragments/fragment_modal_long::modal('오늘 로그')}"></div>
+</div>
+
+
+</html>

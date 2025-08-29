@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout_frame}" xmlns="http://www.w3.org/1999/html">
+
+
+<div class="row justify-content-md-center" layout:fragment="content">
+
+    <div class="col-md-5 mt-4">
+        <div class="card text-center">
+            <div class="card-header pb-0 px-3 ">
+                <h6 class="mb-0">PGP 공개키링 추가하기</h6>
+            </div>
+
+            <form id="form_pub_merge" name="dtoListTest" action="/pgp/merge" method="post" enctype="multipart/form-data"
+                  target="iframe1">
+                <input hidden name="merge_type" value="public">
+                <div class="card-body pt-4 p-3 px-4">
+                    <ul class="list-group align-items-center">
+                        <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg justify-content-md-center">
+                            <div class="d-flex flex-column">
+                                <label class="text-dark text-gradient form-control-plaintext px-4">기존 공개키링</label>
+                            </div>
+                            <div class="d-flex flex-column">
+                                <div>
+                                    <input data-name="svcType" value="PGP" hidden>
+                                    <input data-name="keyRingType" value="PUBLIC_COLLECTION" hidden>
+                                </div>
+                                <div class="input-group mb-3">
+                                    <input class="upload form-control" type="file" data-name="keyRingFile"/>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg justify-content-md-center">
+                            <div class="d-flex flex-column">
+                                <label class="text-dark text-gradient form-control-plaintext px-4">신규 공개키링</label>
+                            </div>
+                            <div class="d-flex flex-column">
+                                <div>
+                                    <input data-name="svcType" value="PGP" hidden>
+                                    <input data-name="keyRingType" value="PUBLIC_NEW" hidden>
+                                </div>
+                                <div class="input-group mb-3">
+                                    <input class="upload form-control" type="file" data-name="keyRingFile"/>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-outline-primary" type="submit" onclick="javascript:checkBeforeUpload(this)">
+                        추가하기
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-md-5 mt-4">
+        <div class="card text-center">
+            <div class="card-header pb-0 px-3 ">
+                <h6 class="mb-0">PGP 비밀키링 추가하기</h6>
+            </div>
+
+            <form id="form_priv_merge" name="dtoListTest" action="/pgp/merge" method="post" enctype="multipart/form-data" target="iframe1">
+                <input hidden name="merge_type" value="private">
+                <div class="card-body pt-4 p-3 px-4">
+                    <ul class="list-group align-items-center">
+                        <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg justify-content-md-center">
+                            <div class="d-flex flex-column">
+                                <label class="text-dark text-gradient form-control-plaintext px-4">기존 비밀키링</label>
+                            </div>
+                            <div class="d-flex flex-column">
+                                <div>
+                                    <input data-name="svcType" value="PGP" hidden>
+                                    <input data-name="keyRingType" value="PRIVATE_COLLECTION" hidden>
+                                </div>
+                                <div class="input-group mb-3">
+                                    <input class="upload form-control" type="file" data-name="keyRingFile"/>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg justify-content-md-center">
+                            <div class="d-flex flex-column">
+                                <label class="text-dark text-gradient form-control-plaintext px-4">신규 비밀키링</label>
+                            </div>
+                            <div class="d-flex flex-column">
+                                <div>
+                                    <input data-name="svcType" value="PGP" hidden>
+                                    <input data-name="keyRingType" value="PRIVATE_NEW" hidden>
+                                </div>
+                                <div class="input-group mb-3">
+                                    <input class="upload form-control" type="file" data-name="keyRingFile"/>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-outline-primary" type="submit" onclick="javascript:checkBeforeUpload(this)">
+                        추가하기
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+
+    <script>
+
+        // 파일 업로드하여 통합 파일 다운로드
+        function uploadFiles(formEl)
+        {
+            const formData = new FormData(formEl)
+
+            fetch(formEl.action, {
+                method: formEl.method,
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    const cd = response.headers.get('Content-Disposition')
+                    if (cd && cd.includes('attachment')) {
+                        const fileName = cd.split('filename=')[1]
+                        const blob = response.blob()
+
+                        blob.then(b => {
+                            const url = URL.createObjectURL(b)
+                            const aEl = document.createElement("a")
+                            aEl.href = url
+                            aEl.download = fileName
+                            aEl.click()
+                            URL.revokeObjectURL(url) // 다운로드 후 url 해제
+                        })
+                    }
+                } else {
+                    console.log(response)
+                    alert('머지 실패. 필요 시 담당자에게 확인 요청하세요( 응답 스테이터스 : ' + response.status + ')')
+                }
+            }).catch(err => {
+                console.log('err', err)
+                alert("오류입니다")
+            })
+        }
+
+
+        // 파일 업로드 전 처리 로직 (빈 파일 칸 검증 / 객체 List로 받기 위한 순서 세팅 )
+        function checkBeforeUpload(ele) {
+
+            const formEl = ele.closest('form')
+            // 디폴트 submit 방지
+            // const formEl = document.querySelector('form')
+            formEl.addEventListener('submit', (event) => {
+                event.preventDefault()
+            })
+
+            const liEl = formEl.querySelectorAll('li')
+
+            // for( l of liEl )
+            for (let i = 0; i < liEl.length; i++) {
+                let l = liEl[i]
+                // 하나라도 비어있는 파일 선택칸이 있다면
+                if (!checkNodeNotEmpty(l)) {
+                    alert('모든 파일선택칸을 채워야합니다 ')
+                    return false
+                } else {
+                    // 객체 배열 순서 세팅
+                    setOrderForList(l, i)
+                }
+            }
+
+            // 파일 업로드
+            uploadFiles(formEl)
+        }
+
+        // 리스트로 객체를 보내기 위해서 순서 지정
+        function setOrderForList(liEl, order) {
+            let valueFields = liEl.querySelectorAll('[data-name]')
+
+            for (let i = 0; i < valueFields.length; i++) {
+                let l = valueFields[i]
+                l.setAttribute('name', 'list[' + order + '].' + l.dataset.name)
+            }
+
+        }
+
+        // 파일 선택칸이 비어있는지 확인
+        function checkNodeNotEmpty(liEl) {
+            // 선택된 파일이 없을 경우
+            const inputEl = liEl.querySelector('input[class*="upload"]')
+
+            if (inputEl.value == '') {
+                // console.log('파일을 선택하세요')
+                return false
+            }
+            return true
+        }
+
+
+    </script>
+    <iframe id="iframe1" name="iframe1" style="display: none"></iframe>
+</div>
+
+
+</html>

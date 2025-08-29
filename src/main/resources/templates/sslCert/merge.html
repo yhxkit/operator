@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout_frame}" xmlns="http://www.w3.org/1999/html">
+
+
+<div class="row justify-content-md-center" layout:fragment="content">
+
+    <div class="col-md-5 mt-4">
+        <div class="card text-center">
+            <div class="card-header pb-0 px-3 ">
+                <h6 class="mb-0">SSL 인증서 풀체인 머지하기</h6>
+            </div>
+
+            <form id="form_fullchain" name="dtoListTest" action="/ssl/unionSslCert" method="post" enctype="multipart/form-data"
+                  target="iframe1">
+                <input hidden name="merge_type" value="fullchain">
+                <div class="card-body pt-4 p-3 px-4">
+                    <ul class="list-group align-items-center">
+                        <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
+                            <div class="ms-auto text-center " style="width: 120px">
+                                <label class="text-dark text-gradient form-control-plaintext px-4">LEAF</label>
+                            </div>
+                            <div class="d-flex flex-column">
+                                <div>
+                                    <input name="svcName" value="MERGE_FULLCHAIN" hidden>
+                                    <input name="certType" value="SSL" hidden>
+                                </div>
+                                <div class="input-group mb-3">
+                                    <input class="upload form-control" type="file" data-name="certFile"/>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
+                            <div class="ms-auto text-center " style="width: 120px">
+                                <label class="text-dark text-gradient form-control-plaintext px-2">INTERMADIATE</label>
+                            </div>
+                            <div class="d-flex flex-column">
+                                <div>
+                                    <input name="svcName" value="MERGE_FULLCHAIN" hidden>
+                                    <input name="certType" value="SSL" hidden>
+                                </div>
+                                <div class="input-group mb-3">
+                                    <input class="upload form-control" type="file" data-name="certFile"/>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
+                            <div class="ms-auto text-center " style="width: 120px">
+                                <label class=" text-dark text-gradient form-control-plaintext px-4">ROOT</label>
+                            </div>
+                            <div class="d-flex flex-column">
+                                <div>
+                                    <input name="svcName" value="MERGE_FULLCHAIN" hidden>
+                                    <input name="certType" value="SSL" hidden>
+                                </div>
+                                <div class="input-group mb-3">
+                                    <input class="upload form-control" type="file" data-name="certFile"/>
+                                </div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-outline-primary" type="submit" onclick="javascript:checkBeforeUpload(this)">
+                        머지하기
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-md-5 mt-4">
+        <div class="card text-center">
+            <div class="card-header pb-0 px-3 ">
+                <h6 class="mb-0">파일 머지하기</h6>
+                <!--                &#45;&#45; 몇개로 이루어질지 제한을 두기 (9개?)-->
+                <button class="btn btn-sm btn-outline-dark" onclick="addInput()"> 파일 선택칸 추가하기</button>
+            </div>
+
+            <form id="form_simple" name="dtoListTest" action="/ssl/unionSslCert" method="post" enctype="multipart/form-data"
+                  target="iframe1">
+                <input hidden name="merge_type" value="simple">
+                <div class="card-body pt-4 p-3 px-4">
+                    <ul class="list-group align-items-center">
+                        <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg">
+                            <div class="d-flex flex-column">
+                                <div>
+                                    <input name="svcName" value="MERGE_SIMPLE" hidden>
+                                    <input name="certType" value="SSL" hidden>
+                                </div>
+                                <div class="input-group mb-3">
+                                    <input class="upload form-control" type="file" data-name="certFile"/>
+                                </div>
+                            </div>
+
+                            <div class="ms-auto text-end">
+                                <a class="btn btn-link text-danger text-gradient px-3 mb-0"
+                                   onclick="javascript:delLiNode(this);"><i
+                                        class="far fa-trash-alt me-2"></i>Delete</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-outline-primary" type="submit" onclick="javascript:checkBeforeUpload(this)">
+                        머지하기
+                    </button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+
+    <script>
+
+        // 파일 업로드 후 머지하여 다운로드
+        function uploadFiles(formEl)
+        {
+            const formData = new FormData(formEl)
+            fetch(formEl.action, {
+                method: formEl.method,
+                body: formData
+            }).then(response => {
+                if( response.ok )
+                {
+                    const cd = response.headers.get('Content-Disposition')
+                    if(cd && cd.includes('attachment'))
+                    {
+                        const fileName = cd.split('filename=')[1]
+                        const blob = response.blob()
+
+                        blob.then(b => {
+                            const url = URL.createObjectURL(b)
+                            const aEl = document.createElement("a")
+                            aEl.href = url
+                            aEl.download = fileName
+                            aEl.click()
+                            URL.revokeObjectURL(url) // 다운로드 후 url 해제
+                        })
+                    }
+                }
+                else
+                {
+                    console.log(response)
+                    alert('머지 실패. 인증서를 다시 확인하고 올려주세요')
+                }
+            }).catch(err => {
+                console.log('err', err)
+            })
+        }
+
+
+        // 파일 업로드 전 처리 로직 (빈 파일 칸 검증 / 객체 List로 받기 위한 순서 세팅 )
+        function checkBeforeUpload(ele)
+        {
+            const formEl = ele.closest('form')
+            // 디폴트 submit 방지
+            formEl.addEventListener('submit', (event) => {
+                event.preventDefault()
+            })
+
+            const liEl = formEl.querySelectorAll('li')
+
+            for (let i = 0; i < liEl.length; i++)
+            {
+                let l = liEl[i]
+                // 하나라도 비어있는 파일 선택칸이 있다면
+                if (!checkNodeNotEmpty(l))
+                {
+                    alert('모든 파일 선택칸을 채워야합니다 ')
+                    return false
+                }
+                else
+                {
+                    // 객체 배열 순서 세팅
+                    setOrderForList(l, i)
+                }
+            }
+
+            // 파일 업로드
+            uploadFiles(formEl)
+        }
+
+
+        // 파일 선택칸 추가
+        function addInput() {
+            const form1 = document.getElementById('form_simple')
+            const allLi = form1.querySelectorAll('li')
+            const lastLi = allLi[allLi.length - 1]
+
+            // 마지막 파일 선택칸이 비어있지 않아야 추가 가능
+            if (checkNodeNotEmpty(lastLi))
+            {
+                let newLi = lastLi.cloneNode(true);
+                let newLiInput = newLi.querySelector('input[class*="upload"]')
+                newLiInput.value = ''
+
+                lastLi.insertAdjacentElement('afterend', newLi);
+            }
+            else
+            {
+                alert('비어있는 파일 선택칸을 채우고 추가해주세요')
+            }
+        }
+
+        // 리스트로 객체를 보내기 위해서 순서 지정
+        function setOrderForList(liEl, order)
+        {
+            let valueFields = liEl.querySelectorAll('[data-name]')
+
+            for (let i = 0; i < valueFields.length; i++)
+            {
+                let l = valueFields[i]
+                l.setAttribute('name', 'list[' + order + '].' + l.dataset.name)
+            }
+
+        }
+
+        // 파일 선택칸이 비어있는지 확인
+        function checkNodeNotEmpty(liEl)
+        {
+            // 선택된 파일이 없을 경우
+            const inputEl = liEl.querySelector('input[class*="upload"]')
+
+            if (inputEl.value == '')
+            {
+                return false
+            }
+
+            return true
+        }
+
+
+        // 파일 선택칸 삭제
+        function delLiNode(ele)
+        {
+            let ulEl = ele.closest('ul')
+            let liEl = ulEl.querySelectorAll('li')
+
+            // 삭제하려는 파일 선택칸이 유일 개체인지 확인
+            if (liEl.length > 1)
+            {
+                ele.closest('li').remove()
+            }
+            else
+            {
+                alert("삭제 불가")
+            }
+        }
+
+    </script>
+    <iframe id="iframe1" name="iframe1" style="display: none"></iframe>
+</div>
+
+
+</html>

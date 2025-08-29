@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout" layout:decorate="~{layouts/layout_frame}" xmlns="http://www.w3.org/1999/html">
+
+<div layout:fragment="content">
+    <div class="row justify-content-md-center">
+        <div class="col-md-10 mt-4">
+            <div class="card text-center">
+                <div class="card-header pb-0 px-3">
+                    <h6 class="mb-0">PGP 키링 DB 저장</h6>
+                </div>
+
+                <form id="form1" name="dtoListTest" action="/pgp/save" method="post"
+                      enctype="multipart/form-data" target="iframe1" >
+                    <div class="card-body pt-4 p-3 px-2">
+                        <ul class="list-group mt-2">
+                            <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg  justify-content-md-center">
+                                <div class="d-flex flex-column">
+                                    <label class=" text-dark text-gradient form-control-plaintext px-4">PUBLIC KEY RING</label>
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <div>
+                                        <input data-name="keyRingType" value="PUBLIC" hidden>
+                                        <input data-name="svcType" value="PGP" hidden>
+                                    </div>
+                                    <div class="input-group mb-3">
+                                        <input class="upload form-control" type="file" data-name="keyRingFile"/>
+                                    </div>
+                                </div>
+                            </li>
+                            <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg  justify-content-md-center">
+                                <div class="d-flex flex-column">
+                                    <label class=" text-dark text-gradient form-control-plaintext px-4">PRIVATE KEY RING</label>
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <div>
+                                        <input data-name="keyRingType" value="PRIVATE" hidden>
+                                        <input data-name="svcType" value="PGP" hidden>
+                                    </div>
+                                    <div class="input-group mb-3">
+                                        <input class="upload form-control" type="file" data-name="keyRingFile"/>
+                                    </div>
+                                </div>
+                            </li>
+
+
+
+                            <li class="list-group-item border-0 d-flex p-4 mb-2 bg-gray-100 border-radius-lg  justify-content-md-center">
+                                <div class="d-flex flex-column">
+                                    <label class=" text-dark text-gradient form-control-plaintext px-4">KEY RING 관련 코멘트</label>
+                                </div>
+                                <div class="d-flex flex-column">
+                                    <div class="input-group mb-3">
+                                        <input class="form-control" type="text" name="comment"/>
+                                    </div>
+                                </div>
+                            </li>
+
+
+                        </ul>
+
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-outline-primary" type="submit" onclick="checkBeforeUpload()">저장하기</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+
+        // 파일 업로드 전 처리 로직 (빈 파일 칸 검증 / 객체 List로 받기 위한 순서 세팅 )
+        function checkBeforeUpload() {
+            // 디폴트 submit 방지
+            const formEl = document.querySelector('form')
+            formEl.addEventListener('submit', (event) => {
+                event.preventDefault()
+            })
+
+            const liEl = formEl.querySelectorAll('li')
+
+            // for( l of liEl )
+            for (let i = 0; i < liEl.length; i++) {
+                let l = liEl[i]
+                // 하나라도 비어있는 파일 선택칸이 있다면
+                if (!checkNodeNotEmpty(l)) {
+                    alert('모든 파일선택칸을 채워야합니다 ')
+                    return false
+                } else {
+                    // 객체 배열 순서 세팅
+                    setOrderForList(l, i)
+                }
+            }
+
+            // 파일 업로드
+            uploadFiles(formEl)
+        }
+
+        // 파일 업로드
+        function uploadFiles(formEl)
+        {
+            const formData = new FormData(formEl)
+
+            let xhr = new XMLHttpRequest()
+            xhr.open(formEl.method, formEl.action, true)
+
+            xhr.onload = (() => {
+                if (xhr.status == 200 && xhr.response === true)
+                {
+                    alert("저장 완료")
+                    location.href='/pgp/dbList'
+                }
+                else
+                {
+                    alert('저장 실패. 인증서를 확인해주세요')
+                }
+            })
+
+            xhr.onerror = (() => {
+                alert('온 에러 ', xhr.status, xhr.statusText, xhr.responseText)
+            })
+
+            xhr.send(formData)
+
+        }
+
+
+        // 리스트로 객체를 보내기 위해서 순서 지정
+        function setOrderForList(liEl, order) {
+            let valueFields = liEl.querySelectorAll('[data-name]')
+
+            for (let i = 0; i < valueFields.length; i++) {
+                let l = valueFields[i]
+                l.setAttribute('name', 'list[' + order + '].' + l.dataset.name)
+            }
+
+        }
+
+        // 파일 선택칸이 비어있는지 확인
+        function checkNodeNotEmpty(liEl) {
+            // 선택된 파일이 없을 경우
+            const inputEl = liEl.querySelector('input[class*="upload"]')
+
+            if ( inputEl && inputEl.value == '') {
+                console.log('파일을 선택하세요')
+                return false
+            }
+
+            return true
+        }
+
+
+    </script>
+    <iframe id="iframe1" name="iframe1" style="display: none"></iframe>
+
+
+</div>
+
+
+</html>
