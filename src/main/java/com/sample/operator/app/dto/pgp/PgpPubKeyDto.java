@@ -18,6 +18,7 @@ public class PgpPubKeyDto {
     Date expirationTime;
 
     long validPeriod;
+    boolean isValidNow;
 
     boolean hasPrivateKey; // = 있으면 mykey, 없으면 partnerkey
 }
